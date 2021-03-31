@@ -1,0 +1,279 @@
+﻿<Window
+    x:Class="PCViz.MainView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
+    xmlns:hw="http://helix-toolkit.org/wpf" 
+    xmlns:local="clr-namespace:PCViz"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"  
+    Title="Point Visualizer 3D"
+    Width="{Binding MainWindowWidth, Mode=TwoWay}"
+    Height="{Binding MainWindowHeight, Mode=TwoWay}"
+    WindowStartupLocation="CenterScreen"
+    x:Name="MainWindow1"        
+    Left="{Binding LeftScreenPosition, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
+    Top="{Binding TopScreenPosition, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"
+    mc:Ignorable="d" Background="#FF465065" Foreground="#FFFFFEFE">
+    <Window.DataContext>
+        <local:MainViewModel x:Name="mainViewModel" />
+    </Window.DataContext>
+    <Window.Resources>
+        <hx:RenderTechniqueConverter x:Key="RenderTechniqueConverter" />
+    </Window.Resources>
+    <Grid Background="#333">        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.5*" MaxWidth="180" MinWidth="150"/>
+            <ColumnDefinition Width="10*"/>
+            <ColumnDefinition Width="1.5*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0" VerticalAlignment="Top" Grid.ColumnSpan="2" Background="#333">
+            <!--<Menu.Background>
+                <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                    <GradientStop Color="#FF2D2D30"/>
+                    <GradientStop Color="#FF465065" Offset="0.258"/>
+                </LinearGradientBrush>
+            </Menu.Background>-->
+            <!-- 
+            <MenuItem Header="File" Style="{StaticResource MenuItem}">
+                <MenuItem Header="Save Screenshot" Style="{StaticResource MenuItem}" Command="{Binding Path=SaveScreenshotCommand}"></MenuItem>
+            </MenuItem>
+            -->
+            <MenuItem Header="File" Style="{StaticResource MenuItem}">
+                <MenuItem Header="Save Screenshot" Style="{StaticResource MenuItem}" Command="{Binding Path=SaveScreenshotCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"></MenuItem>
+            </MenuItem>
+                <MenuItem Header="View" Style="{StaticResource MenuItem}" >
+                <MenuItem Command="hx:ViewportCommands.ZoomExtents" Header="Zoom extents" Background="#454545" Foreground="#FFF" />
+                <MenuItem Header="Up direction" Background="#454545" Foreground="#FFF">
+                    <MenuItem Command="{Binding UpXCommand}" Header="Up Dir X" Background="#454545" Foreground="#FFF" />
+                    <MenuItem Command="{Binding UpYCommand}" Header="Up Dir Y" Background="#454545" Foreground="#FFF" />
+                    <MenuItem Command="{Binding UpZCommand}" Header="Up Dir Z" Background="#454545" Foreground="#FFF" />
+                </MenuItem>
+                <MenuItem Command="{Binding Filepath}" Header="Load file" Style="{StaticResource MenuItem}"/>
+            </MenuItem>
+        </Menu>
+
+        <hx:Viewport3DX
+            x:Name="view1"
+            Title="{Binding Title}" 
+            CurrentPosition="{Binding ViewPortPosition}"
+            BackgroundColor="Black"
+            Camera="{Binding Camera}"
+            CoordinateSystemLabelForeground="#434343"
+            UseDefaultGestures="True"
+            EffectsManager="{Binding EffectsManager}"
+            
+            ShowViewCube="True"
+            IsViewCubeEdgeClicksEnabled="True"
+            ShowCoordinateSystem="True"
+            SubTitle="{Binding SubTitle}"
+            TextBrush="#FFFEFFF6"
+            EnableSwapChainRendering="True" 
+            EnableD2DRendering="False"
+            FXAALevel="Low"
+            EnableDeferredRendering="False"   
+            ClipToBounds="False" Margin="0,0,0,0" 
+            CameraRotationMode="Turnball"
+            CoordinateSystemHorizontalPosition="0" 
+            IsThreeFingerPanningEnabled="False"
+            IsTouchRotateEnabled="False" 
+            IsViewCubeMoverEnabled="False" 
+            IsCoordinateSystemMoverEnabled="False"            
+            
+            ShowCameraInfo="True"
+            ShowCameraTarget="True"
+            ShowTriangleCountInfo="True"
+            ShowFrameDetails="True"
+            
+            
+            OITWeightMode="NonLinear" 
+            Grid.ColumnSpan="1"
+            Grid.Column="1" 
+            Grid.RowSpan="2">
+
+            
+            <hx:Viewport3DX.InputBindings>
+
+                <KeyBinding Key="B" Command="hx:ViewportCommands.BackView" />
+                <KeyBinding Key="G" Command="hx:ViewportCommands.FrontView" />
+                <KeyBinding Key="T" Command="hx:ViewportCommands.TopView" />
+                <KeyBinding Key="V" Command="hx:ViewportCommands.BottomView" />
+                <KeyBinding Key="G" Command="hx:ViewportCommands.LeftView" />
+                <KeyBinding Key="H" Command="hx:ViewportCommands.RightView" />
+                <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Gesture="Control+E" />
+                <MouseBinding Command="hx:ViewportCommands.Rotate" Gesture="RightClick" />
+                <MouseBinding Command="hx:ViewportCommands.Zoom" Gesture="MiddleClick" />
+                <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="LeftClick" />
+            </hx:Viewport3DX.InputBindings>
+
+            <hx:AmbientLight3D Color="{Binding AmbientLightColor}" />
+            <hx:DirectionalLight3D Direction="{Binding Camera.LookDirection}" 
+                                   Color="{Binding DirectionalLightColor}" />
+            <hx:ScreenQuadModel3D Texture="{Binding BackgroundTexture}" />
+
+            <hx:LineGeometryModel3D
+                x:Name="pointlines"
+                Thickness="0.5"
+                Geometry="{Binding PointGrid.GridGeometry}"
+                Transform="{Binding Points.PointsTransform}"
+                Color="{Binding Grid.GridColor}" IsHitTestVisible="False" IsEnabled="False" 
+                IsDepthClipEnabled="False" IsMultisampleEnabled="False" IsScissorEnabled="False"/>
+
+            <hx:LineGeometryModel3D
+                x:Name="grid"
+                Thickness="0.2"
+                Geometry="{Binding Grid.GridGeometry}"
+                Transform="{Binding Grid.GridTransform}"
+                Color="{Binding Grid.GridColor}" 
+                IsHitTestVisible="False" 
+                IsEnabled="False" 
+                IsDepthClipEnabled="False" 
+                IsMultisampleEnabled="False" 
+                IsScissorEnabled="False"/>
+
+            <hx:LineGeometryModel3D
+                x:Name="arrows"                
+                Thickness="1"
+                Geometry="{Binding Axis.AxisGeometry}"
+                Transform="{Binding Axis.AxisTransform}"
+                Color="{Binding Axis.AxisColor}" 
+                IsHitTestVisible="False" 
+                IsEnabled="False" 
+                IsDepthClipEnabled="False" 
+                IsMultisampleEnabled="False" 
+                IsScissorEnabled="False"/>
+
+            <hx:PointGeometryModel3D
+                x:Name="points"
+                Geometry="{Binding Points.PointsGeometry}"
+                Transform="{Binding Points.PointsTransform}"
+                Color="{Binding Points.PointsColor}" 
+                IsDepthClipEnabled="False" IsEnabled="False" IsHitTestVisible="False" IsMultisampleEnabled="True" 
+                IsScissorEnabled="False"  FixedSize="True" Size="2,2"/>
+
+            <hx:MeshGeometryModel3D
+                x:Name="MeshModel"
+                ></hx:MeshGeometryModel3D>
+
+        </hx:Viewport3DX>
+
+        <DockPanel Grid.Row="1" Margin="5 0" Width="auto" LastChildFill="False">
+            <Button Style ="{StaticResource StandardButton}" Content="LOAD DATA" DockPanel.Dock="Top" 
+                     Command="{Binding Path=OpenCommand}">
+            </Button>
+            <Button Style ="{StaticResource StandardButton}" Content="DISPLAY" DockPanel.Dock="Top" 
+                    Command="{Binding Path=DisplayCommand}">
+            </Button>
+            <Button Style ="{StaticResource StandardButton}" Content="CLEAR" DockPanel.Dock="Top"
+                    Command="{Binding Path= ClearCommand}">
+            </Button>
+            <Border DockPanel.Dock="Top" Height="auto" MinHeight="50" Margin="0 2">
+                <TextBlock Name="txtFile" TextWrapping="Wrap" VerticalAlignment="Top" Margin="2"
+                       MinHeight="50" Text= "{Binding Filepath}" />
+            </Border>
+           
+            <Button Name="teseses" Content="Show grid" DockPanel.Dock="Top"
+                    Height="40" Foreground="White" FontFamily="Segoe UI Semibold" Margin="0 20"
+                    FontSize="20" Command="{Binding Path= TestCommand}"
+                    BorderThickness="0" >
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#31B85B" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SomeConditionalProperty}" Value="True">
+                                <Setter Property="Background" Value="{Binding BackgroundColorBtn1}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </DockPanel>
+
+        <DockPanel Grid.Column="2" Grid.Row="1">
+            <GroupBox Header="Depth Scale" Padding="5" DockPanel.Dock="Top">
+                <StackPanel >
+                    <Label Content="Max Depth" Foreground="#FFF" />
+                    <Slider x:Name="MaxDepthRange" Maximum="{Binding MaxMinDepth[0]}" Minimum="{Binding MaxMinDepth[1]}" Value="{Binding MaxColorScaleZ}"/>
+                    <DockPanel Margin="2">
+                        <Label Content="{Binding MaxMinDepth[1]}"  DockPanel.Dock="Left" Foreground="#FFF" Margin="0 0" Width="30" HorizontalContentAlignment="Center"/>
+                        <Label Content="{Binding ElementName=MaxDepthRange, Path=Value}" Width="58" HorizontalContentAlignment="Center" Foreground="#FFF"/>
+                        <Label Content="{Binding MaxMinDepth[0]}"  DockPanel.Dock="Right" Foreground="#FFF" Margin="0 0" Width="30" HorizontalContentAlignment="Center" />
+                    </DockPanel>
+                    <Label Content="Min Depth" Foreground="#FFF"/>
+                    <Slider x:Name="MinDepthRange"  Maximum="{Binding MaxMinDepth[0]}" Minimum="{Binding MaxMinDepth[1]}" Value="{Binding MinColorScaleZ}" />
+                    <DockPanel Margin="2">
+                        <Label Content="{Binding MaxMinDepth[1]}"  DockPanel.Dock="Left" Foreground="#FFF" Margin="0 0" Width="30" HorizontalContentAlignment="Center"/>
+                        <Label Content="{Binding ElementName=MinDepthRange, Path=Value}" Width="58" HorizontalContentAlignment="Center" Foreground="#FFF"/>
+                        <Label Content="{Binding MaxMinDepth[0]}"  DockPanel.Dock="Right" Foreground="#FFF" Margin="0 0" Width="30" HorizontalContentAlignment="Center" />
+                    </DockPanel>
+                    <Button Name="Kolorbtn" Content="COLOR" DockPanel.Dock="Top"
+                    Height="40" Foreground="White" FontFamily="Segoe UI Semibold" Margin="0 2"
+                    FontSize="20" Command="{Binding Path= RecolorCommand}"
+                    BorderThickness="0" >
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#31B85B" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SomeConditionalProperty}" Value="True">
+                                        <Setter Property="Background" Value="{Binding BackgroundColorBtn1}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <ComboBox Margin="0,10,0,0" ItemsSource="{Binding Path=ColorScales, Converter={local:EnumToCollectionConverter}, Mode=OneTime}" 
+                              DisplayMemberPath="Description" SelectedValuePath="Value" SelectedValue="{Binding Path=ColorScales}">
+
+                    </ComboBox>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Header="Camera" Padding="5" DockPanel.Dock="Top">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Label>Per</Label>
+                    <ToggleButton Style ="{StaticResource SwitchTypeToggleButton}" IsChecked="{Binding CameraTypeSwitch}" 
+                              Width="50" Height="22"></ToggleButton>
+                    <Label>Ort</Label>
+                </StackPanel>
+            </GroupBox>
+            <StackPanel>
+                <TextBox Text="{Binding ElementName=MainWindow1, Path=Left}"></TextBox>
+                <TextBox Text="{Binding ElementName=MainWindow1, Path=Top}"></TextBox>
+            </StackPanel>
+        </DockPanel>
+
+        <StatusBar Grid.Row="2" VerticalAlignment="Bottom" Grid.ColumnSpan="3" Foreground="#FFF">
+            <StatusBar.Background>
+                <SolidColorBrush Opacity="1" Color="#454545" />
+            </StatusBar.Background>
+            <StatusBarItem>
+                <TextBlock
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Text="{Binding FrameRate, ElementName=view1, StringFormat=D3D11 - \{0:0.00\} FPS}" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock Text="{Binding Camera.Position, StringFormat=Position: \{0:0.0\}}" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock Text="{Binding Camera.LookDirection, StringFormat=LookDirection: \{0:0.0\}}" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock Text="{Binding Camera.UpDirection, StringFormat=UpDirection: \{0:0.0\}}" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock Text="{Binding Items.Count, ElementName=view1, StringFormat=Children: \{0\}}" />
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
